@@ -1,3 +1,0 @@
-/home/moe/Talparov/build/CMakeFiles/Talparov.dir
-/home/moe/Talparov/build/CMakeFiles/edit_cache.dir
-/home/moe/Talparov/build/CMakeFiles/rebuild_cache.dir
