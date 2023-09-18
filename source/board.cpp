@@ -5,75 +5,6 @@
 #include "../include/board.h"
 #include <iostream>
 #include <functional>
-
-static constexpr std::array<int, 64> pawnScoreTable = {
-    0	,	0	,	0	,	0	,	0	,	0	,	0	,	0	,
-    10	,	10	,	0	,	-10	,	-10	,	0	,	10	,	10	,
-    5	,	0	,	0	,	5	,	5	,	0	,	0	,	5	,
-    0	,	0	,	10	,	20	,	20	,	10	,	0	,	0	,
-    5	,	5	,	5	,	10	,	10	,	5	,	5	,	5	,
-    10	,	10	,	10	,	20	,	20	,	10	,	10	,	10	,
-    20	,	20	,	20	,	30	,	30	,	20	,	20	,	20	,
-    0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
-};
-
-static constexpr std::array<int, 64> knightScoreTable = {
-    0	,	-10	,	0	,	0	,	0	,	0	,	-10	,	0	,
-    0	,	0	,	0	,	5	,	5	,	0	,	0	,	0	,
-    0	,	0	,	10	,	10	,	10	,	10	,	0	,	0	,
-    0	,	0	,	10	,	20	,	20	,	10	,	5	,	0	,
-    5	,	10	,	15	,	20	,	20	,	15	,	10	,	5	,
-    5	,	10	,	10	,	20	,	20	,	10	,	10	,	5	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
-};
-
-static constexpr std::array<int, 64> bishopScoreTable = {
-    0	,	0	,	-10	,	0	,	0	,	-10	,	0	,	0	,
-    0	,	0	,	0	,	10	,	10	,	0	,	0	,	0	,
-    0	,	0	,	10	,	15	,	15	,	10	,	0	,	0	,
-    0	,	10	,	15	,	20	,	20	,	15	,	10	,	0	,
-    0	,	10	,	15	,	20	,	20	,	15	,	10	,	0	,
-    0	,	0	,	10	,	15	,	15	,	10	,	0	,	0	,
-    0	,	0	,	0	,	10	,	10	,	0	,	0	,	0	,
-    0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
-};
-
-static constexpr std::array<int, 64> rookScoreTable = {
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0	,
-    25	,	25	,	25	,	25	,	25	,	25	,	25	,	25	,
-    0	,	0	,	5	,	10	,	10	,	5	,	0	,	0
-};
-
-static constexpr std::array<int, 64> queenScoreTable = {
-    0	,	0	,	-5	,	10	,	10	,	0	,	0	,	-5	,
-    0	,	0	,	0	,	20	,	20	,	0	,	0	,	0	,
-    0	,	0	,	15	,	25	,	25	,	0	,	0	,	15	,
-    0	,	10	,	20	,	35	,	35	,	0	,	10	,	20	,
-    0	,	10	,	20	,	40	,	40	,	0	,	10	,	20	,
-    0	,	0	,	15	,	30	,	30	,	0	,	0	,	15	,
-    25	,	25	,	25	,	25	,	25	,	25	,	25	,	25	,
-    0	,	0	,	5	,	10	,	10	,	0	,	0	,	5	,
-};
-
-
-static constexpr std::array<int, 64> blackSq = {
-    56	,	57	,	58	,	59	,	60	,	61	,	62	,	63	,
-    48	,	49	,	50	,	51	,	52	,	53	,	54	,	55	,
-    40	,	41	,	42	,	43	,	44	,	45	,	46	,	47  ,
-    32	,	33	,	34	,	35	,	36	,	37	,	38	,	39	,
-    24	,	25	,	26	,	27	,	28	,	29	,	30	,	31	,
-    16	,	17	,	18	,	19	,	20	,	21	,	22	,	23	,
-    8	,	9	,	10	,	11	,	12	,	13	,	14	,	15	,
-    0	,	1	,	2	,	3	,	4	,	5	,	6	,	7
-};
-
-
 #define GETBLACKSQ(sq) (blackSq[(sq)])
 
 void Board::reset() {
@@ -106,6 +37,14 @@ void Board::reset() {
 
     castlePerm = 0;
     posKey = 0;
+}
+
+std::string Board::squareToText(Squares sq) const {
+    char file = 'a' + filesBoard.at(sq);
+    char rank = '1' + ranksBoard.at(sq);
+
+    std::string ret = std::string() + file + rank;
+    return ret;
 }
 
 void Board::print() const {
@@ -181,15 +120,17 @@ void Board::updateMaterials() {
     }
 }
 
-bool Board::loadFEN(const char* fen) {
+bool Board::loadFEN(std::string fenStr) {
 
     int rank = Ranks::Eight;
     int file = Files::A;
     Pieces piece = Pieces::EMPTY;
     int count;
-    int sq64, sq120;
+    Squares sq64, sq120;
 
     this->reset();
+
+    std::string::iterator fen = std::begin(fenStr);
 
     while((rank >= Ranks::One) && *fen) {
         count = 1;
@@ -227,12 +168,12 @@ bool Board::loadFEN(const char* fen) {
                       continue;
 
             default:
-                      std::cout << "FEN format error.\n";
+                      std::cout << "Invalid FEN format.\n";
                       return false;
         }
         for(int i = 0; i < count; i++) {
-            sq64 = rank * 8 + file;
-            sq120 = getSquareIndex(SQ::SQ120, sq64);
+            sq64 = static_cast<Squares>(rank * 8 + file);
+            sq120 = static_cast<Squares>(getSquareIndex(SQ::SQ120, sq64));
             if(piece != Pieces::EMPTY)
                 pieces.at(sq120) = piece;
             file++;
@@ -266,8 +207,8 @@ bool Board::loadFEN(const char* fen) {
     return true;
 }
 
-u64 Board::generateHashKey() const {
-    u64 key = 0ull;
+std::uint64_t Board::generateHashKey() const {
+    std::uint64_t key = 0ull;
     int sq = 0;
     for(auto piece : pieces) {
         if(piece != Squares::NO_SQ && piece != Pieces::EMPTY && piece != Squares::OFF_BOARD) {
@@ -283,12 +224,86 @@ u64 Board::generateHashKey() const {
     return key;
 }
 
-const std::tuple<bool, int> Board::isSquareAttacked(Squares sq, Side attackingSide) const {
-    constexpr int knDir[8] = { -8, -19,	-21, -12, 8, 19, 21, 12 };
-    constexpr int rkDir[4] = { -1, -10,	1, 10 };
-    constexpr int biDir[4] = { -9, -11, 11, 9 };
-    constexpr int kiDir[8] = { -1, -10,	1, 10, -9, -11, 11, 9 };
+const bool Board::isSquareAttackedOptm(Squares sq, Side attackingSide) const {
+    Pieces tPiece;
+    int tSq;
 
+    //Pawns Attack;
+    if(attackingSide == Side::White) {
+        if (pieces.at(sq - 11) == Pieces::wP || pieces.at(sq - 9) == Pieces::wP) {
+            return true;
+        }
+    } else {
+        if (pieces.at(sq + 11) == Pieces::bP || pieces.at(sq + 9) == Pieces::bP) {
+            return true;
+        }
+    }
+
+    //Knights Attack
+    for(auto dir : knDir) {
+        tSq = sq + dir;
+        tPiece = pieces.at(tSq);
+        while (tPiece != Squares::OFF_BOARD) {
+            if(tPiece != Pieces::EMPTY) {
+                if(isItKnight(tPiece)
+                        && pieceColor[tPiece] == attackingSide) {
+                    return true;
+                }
+            }
+            break;
+        }
+    }
+
+    //Rooks and Queens Attack
+    for(auto dir : rkDir) {
+        tSq = sq + dir;
+        tPiece = pieces.at(tSq);
+        while (tPiece != Squares::OFF_BOARD) {
+            if(tPiece != Pieces::EMPTY) {
+                if(isItRookOrQueen(tPiece) &&
+                        pieceColor[tPiece] == attackingSide) {
+                    return true;
+                }
+                break;
+            }
+            tSq += dir;
+            tPiece = pieces.at(tSq);
+        }
+    }
+
+    //Bishops and Queens Attack
+    for(auto dir : biDir) {
+        tSq = sq + dir;
+        tPiece = pieces.at(tSq);
+        while (tPiece != Squares::OFF_BOARD) {
+            if (tPiece != Pieces::EMPTY) {
+                if (isItBishopOrQueen(tPiece) &&
+                        pieceColor[tPiece] == attackingSide) {
+                    return true;
+                }
+                break;
+            }
+            tSq += dir;
+            tPiece = pieces.at(tSq);
+        }
+    }
+
+    //King Attack
+    for(auto dir : kiDir) {
+        tSq = sq + dir;
+        tPiece = pieces.at(tSq);
+        while (tPiece != Squares::OFF_BOARD) {
+            if(isItKing(tPiece)
+                    && pieceColor[tPiece] == attackingSide) {
+                return true;
+            }
+            break;
+        }
+    }
+    return false;
+}
+
+const std::tuple<bool, int> Board::isSquareAttacked(Squares sq, Side attackingSide) const {
     bool attacked = false;
     int noOfAttackers = 0;
 
@@ -407,7 +422,6 @@ inline void Board::hashEnPassant() {
 void Board::clearPiece(Squares square) {
     Pieces piece = pieces.at(square);
 
-
     int color = pieceColor[piece];
     int tPiece = 0;
     hashPiece(piece, square);
@@ -429,6 +443,7 @@ void Board::clearPiece(Squares square) {
         pawns.at(Side::Both).unset(square);
     }
 
+    //removing the piece from the pieceList
     for(int i = 0; i < piecesNum.at(piece); i++) {
         if(getFromPiecesList(piece, i) == square) {
             tPiece = i;
@@ -570,11 +585,9 @@ bool Board::makeMove(const Move& move) {
     else
         side = Side::White;
 
-    Side temp = (side == Side::White ? Side::Black : Side::White);
-
     hashSide();
 
-    if(isSquareAttacked(kingSq.at(temp), side) != std::make_tuple(false, 0)) {
+    if(isSquareAttackedOptm(kingSq.at(getOppSide()), side)) {
         undoMove();
         return false;
     }
@@ -665,8 +678,79 @@ Side Board::getSide() const {
     return side;
 }
 
-void Board::hashCastling() {
+inline void Board::hashCastling() {
     posKey ^= castleHK[castlePerm];
+}
+
+bool Board::check() const {
+
+    int t_pceNum[13] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int t_bigPce[2] = { 0, 0};
+    int t_majPce[2] = { 0, 0};
+    int t_minPce[2] = { 0, 0};
+    int t_material[2] = { 0, 0};
+
+    int sq120,colour;
+
+    BitBoard t_pawns[3];
+
+    t_pawns[Side::White] = pawns.at(Side::White);
+    t_pawns[Side::Black] = pawns[Side::Black];
+    t_pawns[Side::Both] = pawns[Side::Both];
+
+    for(Pieces tPiece = Pieces::wP; tPiece <= Pieces::bK; ++tPiece) {
+        for(int tPceNum = 0; tPceNum < piecesNum.at(tPiece); ++tPceNum) {
+            sq120 = getFromPiecesList((Pieces)tPiece, tPceNum);
+        }
+    }
+
+    for(int sq64 = 0; sq64 < 64; ++sq64) {
+        sq120 = getSquareIndex(SQ::SQ120, sq64);
+        Pieces tPiece = pieces.at(sq120);
+        t_pceNum[tPiece]++;
+        colour = pieceColor[tPiece];
+
+        if( pieceBig[tPiece] == true) t_bigPce[colour]++;
+        if( pieceMin[tPiece] == true) t_minPce[colour]++;
+        if( pieceMaj[tPiece] == true) t_majPce[colour]++;
+
+        t_material[colour] += pieceVal[tPiece];
+    }
+
+    for(Pieces tPiece = Pieces::wP; tPiece <= Pieces::bK; ++tPiece) {
+        assert(t_pceNum[tPiece] == this->piecesNum[tPiece]);
+    }
+
+    assert(t_pawns[Side::White].count() == pawns.at(Side::White).count());
+
+    assert(t_pawns[Side::Black].count() == pawns.at(Side::Black).count());
+
+    assert(t_pawns[Side::Both].count() == pawns.at(Side::Both).count());
+
+    while(t_pawns[Side::White].count()) {
+        assert(pieces[getSquareIndex(SQ::SQ120, t_pawns[Side::White].pop())] == Pieces::wP);
+    }
+
+    while(t_pawns[Side::Black].count()) {
+        assert(pieces[getSquareIndex(SQ::SQ120, t_pawns[Side::Black].pop())] == Pieces::bP);
+    }
+
+    while(t_pawns[Side::Both].count()) {
+        int sq64 = t_pawns[Side::Both].pop();
+        assert(pieces[getSquareIndex(SQ::SQ120, sq64)] == Pieces::wP || pieces[getSquareIndex(SQ::SQ120, sq64)] == Pieces::bP);
+    }
+
+    assert(t_material[Side::White] == material[Side::White] && t_material[Side::Black] == material[Side::Black]);
+    assert(t_minPce[Side::White] == minPieces[Side::White] && t_minPce[Side::Black] == minPieces[Side::Black]);
+    assert(t_majPce[Side::White] == majPieces[Side::White] && t_majPce[Side::Black] == majPieces[Side::Black]);
+    assert(t_bigPce[Side::White] == bigPieces[Side::White] && t_bigPce[Side::Black] == bigPieces[Side::Black]);
+
+    assert(side == Side::White || side == Side::Black);
+
+    assert(pieces[this->kingSq[Side::White]] == Pieces::wK);
+    assert(pieces[this->kingSq[Side::Black]] == Pieces::bK);
+
+    return true;
 }
 
 bool Board::isRep() const {
@@ -678,18 +762,59 @@ bool Board::isRep() const {
     return false;
 }
 
+bool Board::materialDraw() const {
+    if (!piecesNum.at(Pieces::wR) && !piecesNum.at(Pieces::bR) && !piecesNum.at(Pieces::wQ) && !piecesNum.at(Pieces::bQ)) {
+        if (!piecesNum.at(bB) && !piecesNum.at(wB)) {
+            if (piecesNum.at(Pieces::wN) < 3 && piecesNum.at(Pieces::bN) < 3) {  return true; }
+        } else if (!piecesNum.at(Pieces::wN) && !piecesNum.at(Pieces::bN)) {
+            if (abs(piecesNum.at(Pieces::wB) - piecesNum.at(Pieces::bB)) < 2) { return true; }
+        } else if ((piecesNum.at(Pieces::wN) < 3 && !piecesNum.at(Pieces::wB)) || (piecesNum.at(Pieces::wB) == 1 && !piecesNum.at(Pieces::wN))) {
+            if ((piecesNum.at(Pieces::bN) < 3 && !piecesNum.at(Pieces::bB)) || (piecesNum.at(Pieces::bB) == 1 && !piecesNum.at(Pieces::bN)))  { return true; }
+        }
+    } else if (!piecesNum.at(Pieces::wQ) && !piecesNum.at(Pieces::bQ)) {
+        if (piecesNum.at(Pieces::wR) == 1 && piecesNum.at(Pieces::bR) == 1) {
+            if ((piecesNum.at(Pieces::wN) + piecesNum.at(Pieces::wB)) < 2 && (piecesNum.at(Pieces::bN) + piecesNum.at(Pieces::bB)) < 2)	{ return true; }
+        } else if (piecesNum.at(wR) == 1 && !piecesNum.at(bR)) {
+            if ((piecesNum.at(Pieces::wN) + piecesNum.at(Pieces::wB) == 0) && (((piecesNum.at(Pieces::bN) + piecesNum.at(Pieces::bB)) == 1) || ((piecesNum.at(Pieces::bN) + piecesNum.at(Pieces::bB)) == 2))) { return true; }
+        } else if (piecesNum.at(Pieces::bR) == 1 && !piecesNum.at(Pieces::wR)) {
+            if ((piecesNum.at(Pieces::bN) + piecesNum.at(Pieces::bB) == 0) && (((piecesNum.at(Pieces::wN) + piecesNum.at(Pieces::wB)) == 1) || ((piecesNum.at(Pieces::wN) + piecesNum.at(Pieces::wB)) == 2))) { return true; }
+        }
+    }
+
+    return false;
+}
+
 int Board::eval() const {
     int score = material.at(Side::White) - material.at(Side::Black);
     int sq;
 
+    if(!piecesNum.at(Pieces::wP) && !piecesNum.at(Pieces::bP))
+        if(materialDraw()) return 0;
+
     for(int i = 0; i < piecesNum.at(Pieces::wP); i++) {
         sq = getFromPiecesList(Pieces::wP, i);
         score += pawnScoreTable[getSquareIndex(SQ::SQ64, sq)];
+
+        if( (isolatedPawnsMask[(int)getSquareIndex(SQ::SQ64, sq)] & pawns.at(Side::White).getBitmask() ) == 0 ) {
+            score += isolatedPawn;
+        }
+
+        if( (whitePassersMask[(int)getSquareIndex(SQ::SQ64, sq)] & pawns.at(Side::Black).getBitmask() ) == 0 ) {
+            score += passedPawn[ranksBoard.at(sq)];
+        }
     }
 
     for(int i = 0; i < piecesNum.at(Pieces::bP); i++) {
         sq = getFromPiecesList(Pieces::bP, i);
         score -= pawnScoreTable[GETBLACKSQ(getSquareIndex(SQ::SQ64, sq))];
+
+        if( (isolatedPawnsMask[getSquareIndex(SQ::SQ64, sq)] & pawns.at(Side::Black).getBitmask() ) == 0 ) {
+            score -= isolatedPawn;
+        }
+
+        if( (blackPassersMask[getSquareIndex(SQ::SQ64, sq)] & pawns.at(Side::White).getBitmask() ) == 0 ) {
+            score -= passedPawn[7 - ranksBoard.at(sq)];
+        }
     }
 
     for(int i = 0; i < piecesNum.at(Pieces::wN); i++) {
@@ -715,21 +840,118 @@ int Board::eval() const {
     for(int i = 0; i < piecesNum.at(Pieces::wR); i++) {
         sq = getFromPiecesList(Pieces::wR, i);
         score += rookScoreTable[getSquareIndex(SQ::SQ64, sq)];
+
+        if(! (pawns.at(Side::Both).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score+= rookOpenFile;
+        else if(! (pawns.at(Side::White).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score+= rookSemiOpenFile;
     }
 
     for(int i = 0; i < piecesNum.at(Pieces::bR); i++) {
         sq = getFromPiecesList(Pieces::bR, i);
         score -= rookScoreTable[GETBLACKSQ(getSquareIndex(SQ::SQ64, sq))];
+
+        if(! (pawns.at(Side::Both).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score-= rookOpenFile;
+        else if(! (pawns.at(Side::Black).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score-= rookSemiOpenFile;
     }
 
     for(int i = 0; i < piecesNum.at(Pieces::wQ); i++) {
         sq = getFromPiecesList(Pieces::wQ, i);
         score += queenScoreTable[getSquareIndex(SQ::SQ64, sq)];
+
+        if(! (pawns.at(Side::Both).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score+= queenOpenFile;
+        else if(! (pawns.at(Side::White).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score+= queenSemiOpenFile;
     }
 
     for(int i = 0; i < piecesNum.at(Pieces::bQ); i++) {
         sq = getFromPiecesList(Pieces::bQ, i);
         score -= queenScoreTable[GETBLACKSQ(getSquareIndex(SQ::SQ64, sq))];
+
+        if(! (pawns.at(Side::Both).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score-= queenOpenFile;
+        else if(! (pawns.at(Side::Black).getBitmask() & fileBBMask[filesBoard.at(sq)]) )
+            score-= queenSemiOpenFile;
+    }
+
+    sq = getFromPiecesList(Pieces::wK, 0);
+    if(material.at(Side::Black) - pieceVal[wK] < EndgameMatch) {
+        score += kingEndgameTable.at(getSquareIndex(SQ::SQ64, sq));
+    }
+    else
+        score += kingOpeningTable.at(getSquareIndex(SQ::SQ64, sq));
+
+    sq = getFromPiecesList(Pieces::bK, 0);
+    if(material.at(Side::White) - pieceVal[wK] < EndgameMatch)
+        score -= kingEndgameTable.at(mirrorSquare64((Squares)getSquareIndex(SQ::SQ64, sq)));
+    else
+        score -= kingOpeningTable.at(mirrorSquare64((Squares)getSquareIndex(SQ::SQ64, sq)));
+
+    if(piecesNum.at(Pieces::wB) >= 2) score += bishopPairScore;
+    if(piecesNum.at(Pieces::bB) >= 2) score -= bishopPairScore;
+
+    //pawns islands
+
+    constexpr uint64_t FILE_A = 0x0101010101010101ULL;
+    constexpr uint64_t FILE_B = FILE_A << 1;
+    constexpr uint64_t FILE_C = FILE_B << 1;
+    constexpr uint64_t FILE_D = FILE_C << 1;
+    constexpr uint64_t FILE_E = FILE_D << 1;
+    constexpr uint64_t FILE_F = FILE_E << 1;
+    constexpr uint64_t FILE_G = FILE_F << 1;
+    constexpr uint64_t FILE_H = FILE_G << 1;
+
+    int whitePawnIslands = 0;
+    int blackPawnIslands = 0;
+
+    uint64_t whitePawns = pawns.at(Side::White).getBitmask();
+    uint64_t blackPawns = pawns.at(Side::Black).getBitmask();
+
+    const uint64_t FILE_AB = FILE_A | FILE_B;
+    const uint64_t FILE_GH = FILE_G | FILE_H;
+
+    uint64_t temp;
+    while (whitePawns != 0) {
+        uint64_t lsb = whitePawns & -whitePawns;
+        whitePawns ^= lsb;
+
+        temp = (lsb >> 1) & ~FILE_H;
+        if ((temp & whitePawns) == 0 && (temp & blackPawns) == 0) {
+            temp = (lsb << 1) & ~FILE_A;
+            if ((temp & whitePawns) == 0 && (temp & blackPawns) == 0) {
+                whitePawnIslands++;
+            }
+        }
+    }
+
+    while (blackPawns != 0) {
+        uint64_t lsb = blackPawns & -blackPawns;
+        blackPawns ^= lsb;
+
+        temp = (lsb << 1) & ~FILE_A;
+        if ((temp & whitePawns) == 0 && (temp & blackPawns) == 0) {
+            temp = (lsb >> 1) & ~FILE_H;
+            if ((temp & whitePawns) == 0 && (temp & blackPawns) == 0) {
+                blackPawnIslands++;
+            }
+        }
+    }
+
+    if(whitePawnIslands > 1) {
+        if(piecesNum.at(Pieces::wQ))
+            score += whitePawnIslands * pawnIslandScore;
+        else
+            score += 2 * (whitePawnIslands * pawnIslandScore);
+    }
+
+    if(blackPawnIslands > 1) {
+        if(piecesNum.at(Pieces::bQ))
+            score -= blackPawnIslands * pawnIslandScore;
+        else
+            score -= 2 * (blackPawnIslands * pawnIslandScore);
     }
 
     if(side == Side::White)
@@ -738,6 +960,79 @@ int Board::eval() const {
         return -score;
 }
 
-u64 Board::getKey() const {
+std::uint64_t Board::getKey() const {
     return posKey;
+}
+
+Side Board::getOppSide() {
+    if(this->side == Side::White)
+        return Side::Black;
+    return Side::White;
+}
+
+void Board::mirror() {
+    Board temp;
+    temp.enPas = Squares::NO_SQ;
+    Pieces tPiece;
+    Side tSide = getOppSide();
+    int swappedPieces[] = {EMPTY, bP, bN, bB, bR, bQ, bK, wP, wN, wB, wR, wQ, wK};
+
+    if(this->castlePerm & Castling::WK) temp.castlePerm |= Castling::WK;
+    if(this->castlePerm & Castling::WQ) temp.castlePerm |= Castling::WQ;
+
+    if(this->castlePerm & Castling::BK) temp.castlePerm |= Castling::BK;
+    if(this->castlePerm & Castling::BQ) temp.castlePerm |= Castling::BQ;
+
+    if(this->enPas != Squares::NO_SQ)
+        temp.enPas = (Squares)getSquareIndex(SQ::SQ120, mirrorSquare64((Squares)getSquareIndex(SQ::SQ64, this->enPas)));
+
+    for(int i = 0; i < 64; i++)
+        temp.pieces.at(i) = this->pieces.at(getSquareIndex(SQ::SQ120, mirrorSquare64((Squares)i)));
+
+    this->reset();
+
+    for(int i = 0; i < 64; i++) {
+        tPiece = (Pieces) swappedPieces[temp.pieces[i]];
+        this->pieces.at(getSquareIndex(SQ::SQ120, i)) = tPiece;
+    }
+
+    this->castlePerm = temp.castlePerm;
+    this->enPas = temp.enPas;
+    this->side = tSide;
+    this->posKey = generateHashKey();
+
+    updateMaterials();
+}
+
+void Board::makeNullMove() {
+    ply++;
+    history.at(hisPly).posKey = posKey;
+
+    if(enPas != Squares::NO_SQ) hashEnPassant();
+
+    history.at(hisPly).move = InvalidMove();
+    history.at(hisPly).fiftyMoves = fiftyMoves;
+    history.at(hisPly).enPas = enPas;
+    history.at(hisPly).castlePerm = castlePerm;
+    enPas = Squares::NO_SQ;
+
+    side = getOppSide();
+    hisPly++;
+    hashSide();
+}
+
+void Board::undoNullMove() {
+    hisPly--;
+    ply--;
+
+    if(enPas != Squares::NO_SQ) hashEnPassant();
+
+    fiftyMoves = history.at(hisPly).fiftyMoves;
+    enPas = history.at(hisPly).enPas;
+    castlePerm =  history.at(hisPly).castlePerm;
+
+    if(enPas != Squares::NO_SQ) hashEnPassant();
+
+    side = getOppSide();
+    hashSide();
 }

@@ -7,7 +7,7 @@
 #include <iostream>
 
 int BitBoard::pop() {
-    u64 temp = bits;
+    std::uint64_t temp = bits;
     int count = 0;
     while ((temp & 1) == 0) {
         count++;
@@ -18,7 +18,7 @@ int BitBoard::pop() {
 }
 
 int BitBoard::count () const {
-    u64 temp = bits;
+    std::uint64_t temp = bits;
     int count = 0;
     for(count; temp; count++, temp &= temp-1);
     return count;
@@ -45,7 +45,11 @@ void BitBoard::set(int index) {
     bits |= 1ull << getSquareIndex(SQ::SQ64, index);
 }
 
-BitBoard& BitBoard::operator=(u64 val) {
+BitBoard& BitBoard::operator=(std::uint64_t val) {
     bits = val;
     return *this;
+}
+
+std::uint64_t BitBoard::getBitmask() const {
+    return bits;
 }

@@ -5,8 +5,7 @@
 #ifndef TALPAROV_MOVE_H
 #define TALPAROV_MOVE_H
 
-#include "../include/consts.h"
-#include <iostream>
+#include "../include/defs.h"
 
 class Move{
 public:
@@ -28,6 +27,7 @@ public:
     Move(const Move&);
     bool operator==(const Move&);
     void operator=(const Move&);
+    char* getMoveStr();
 };
 
 class InvalidMove : public Move {

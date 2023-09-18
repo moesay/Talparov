@@ -4,6 +4,7 @@
 
 #include "../include/movegen.h"
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 
 int MoveGenerator::mvvLva[13][13];
@@ -12,7 +13,6 @@ bool MoveGenerator::set = false;
 unsigned long MoveGenerator::leafNodes = 0;
 
 void MoveGenerator::addNonCaptureMove(Move move) {
-
     if(board->killers[0][board->ply] == move)
         move.score = 900000;
     else if(board->killers[1][board->ply] == move)
@@ -37,15 +37,12 @@ void MoveGenerator::generateAllMoves() {
     moves.clear();
     int sq = 0, tSq = 0;
 
-    const int knDir[8] = {-8, -19, -21, -12, 8, 19, 21, 12};
-    const int rkDir[4] = {-1, -10, 1, 10};
-    const int biDir[4] = {-9, -11, 11, 9};
-    const int kiDir[8] = {-1, -10, 1, 10, -9, -11, 11, 9};
-
     if (board->side == Side::White) {
+        //loop over every white pawn
         for (int pceNum = 0; pceNum < board->piecesNum.at(Pieces::wP); pceNum++) {
             sq = board->getFromPiecesList(Pieces::wP, pceNum);
 
+            //not capturing moves
             if (board->pieces.at(sq + 10) == Pieces::EMPTY) {
                 insertwPMove(Move((Squares) sq, (Squares) (sq + 10)));
                 if (ranksBoard.at(sq) == Ranks::Two && board->pieces.at(sq + 20) == Pieces::EMPTY) {
@@ -201,9 +198,10 @@ void MoveGenerator::generateAllMoves() {
 
         //castling king side
         if (board->castlePerm & Castling::WK) {
-            if (board->isSquareAttacked(Squares::E1, Side::Black) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::F1, Side::Black) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::G1, Side::Black) == std::make_tuple(false, 0)) {
+            /* if (board->isSquareAttacked(Squares::E1, Side::Black) == std::make_tuple(false, 0) && */
+            if (! board->isSquareAttackedOptm(Squares::E1, Side::Black) &&
+                    ! board->isSquareAttackedOptm(Squares::F1, Side::Black) &&
+                    ! board->isSquareAttackedOptm(Squares::G1, Side::Black)) {
                 if (board->pieces.at(Squares::F1) == Pieces::EMPTY && board->pieces.at(Squares::G1) == Pieces::EMPTY) {
                     addNonCaptureMove(Move(Squares::E1, Squares::G1,
                                 Pieces::EMPTY, false, false, Pieces::EMPTY, true));
@@ -213,9 +211,9 @@ void MoveGenerator::generateAllMoves() {
 
         //castling queen side
         if (board->castlePerm & Castling::WQ) {
-            if (board->isSquareAttacked(Squares::E1, Side::Black) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::D1, Side::Black) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::C1, Side::Black) == std::make_tuple(false, 0)) {
+            if (! board->isSquareAttackedOptm(Squares::E1, Side::Black) &&
+                    ! board->isSquareAttackedOptm(Squares::D1, Side::Black) &&
+                    ! board->isSquareAttackedOptm(Squares::C1, Side::Black)) {
                 if (board->pieces.at(Squares::D1) == Pieces::EMPTY &&
                         board->pieces.at(Squares::C1) == Pieces::EMPTY && board->pieces.at(Squares::B1) == Pieces::EMPTY) {
                     addNonCaptureMove(Move(Squares::E1, Squares::C1,
@@ -228,6 +226,7 @@ void MoveGenerator::generateAllMoves() {
     else {
         for (int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bP); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bP, pceNum);
+            /* assert(sq != Squares::OFF_BOARD); */
 
             //not capturing moves
             if (board->pieces.at(sq - 10) == Pieces::EMPTY && board->pieces.at(sq - 10) != Squares::OFF_BOARD) {
@@ -282,7 +281,7 @@ void MoveGenerator::generateAllMoves() {
             }
         }
 
-        //white Queen
+        //black Queen
         for (int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bQ); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bQ, pceNum);
             for (auto dir : rkDir) {
@@ -291,6 +290,7 @@ void MoveGenerator::generateAllMoves() {
                     //quite moves
                     if (board->pieces.at(tSq) == Pieces::EMPTY) {
                         addNonCaptureMove(Move((Squares) sq, (Squares) (tSq)));
+                        //break;
                     }
                     //capture move
                     if (pieceColor[board->pieces.at(tSq)] == Side::White) {
@@ -303,7 +303,7 @@ void MoveGenerator::generateAllMoves() {
                 }
             }
         }
-        //white Queens diagonal move
+        //black Queens diagonal move
         for (int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bQ); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bQ, pceNum);
             for (auto dir : biDir) {
@@ -312,6 +312,7 @@ void MoveGenerator::generateAllMoves() {
                     //quite moves
                     if (board->pieces.at(tSq) == Pieces::EMPTY) {
                         addNonCaptureMove(Move((Squares) sq, (Squares) (tSq)));
+                        //break;
                     }
                     //capture move
                     if (pieceColor[board->pieces.at(tSq)] == Side::White) {
@@ -325,7 +326,7 @@ void MoveGenerator::generateAllMoves() {
             }
         }
 
-        //white Bishop
+        //black Bishop
         for (int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bB); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bB, pceNum);
             for (auto dir : biDir) {
@@ -334,6 +335,7 @@ void MoveGenerator::generateAllMoves() {
                     //quite moves
                     if (board->pieces.at(tSq) == Pieces::EMPTY) {
                         addNonCaptureMove(Move((Squares) sq, (Squares) (tSq)));
+                        //break;
                     }
                     //capture move
                     if (pieceColor[board->pieces.at(tSq)] == Side::White) {
@@ -347,7 +349,7 @@ void MoveGenerator::generateAllMoves() {
             }
         }
 
-        //white Knight
+        //black Knight
         for(int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bN); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bN, pceNum);
             for(auto dir : knDir) {
@@ -366,7 +368,7 @@ void MoveGenerator::generateAllMoves() {
                 }
             }
         }
-        //white King
+        //black King
         for(int pceNum = 0; pceNum < board->piecesNum.at(Pieces::bK); pceNum++) {
             sq = board->getFromPiecesList(Pieces::bK, pceNum);
             for(auto dir : kiDir) {
@@ -388,9 +390,9 @@ void MoveGenerator::generateAllMoves() {
 
         //castling king side
         if (board->castlePerm & Castling::BK) {
-            if (board->isSquareAttacked(Squares::E8, Side::White) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::F8, Side::White) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::G8, Side::White) == std::make_tuple(false, 0)) {
+            if (! board->isSquareAttackedOptm(Squares::E8, Side::White) &&
+                    ! board->isSquareAttackedOptm(Squares::F8, Side::White) &&
+                    ! board->isSquareAttackedOptm(Squares::G8, Side::White)) {
                 if (board->pieces.at(Squares::F8) == Pieces::EMPTY && board->pieces.at(Squares::G8) == Pieces::EMPTY) {
                     addNonCaptureMove(Move(Squares::E8, Squares::G8,
                                 Pieces::EMPTY, false, false, Pieces::EMPTY, true));
@@ -400,9 +402,9 @@ void MoveGenerator::generateAllMoves() {
 
         //castling queen side
         if (board->castlePerm & Castling::BQ) {
-            if (board->isSquareAttacked(Squares::E8, Side::White) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::D8, Side::White) == std::make_tuple(false, 0) &&
-                    board->isSquareAttacked(Squares::C8, Side::White) == std::make_tuple(false, 0)) {
+            if (! board->isSquareAttackedOptm(Squares::E8, Side::White) &&
+                    ! board->isSquareAttackedOptm(Squares::D8, Side::White) &&
+                    ! board->isSquareAttackedOptm(Squares::C8, Side::White)) {
                 if (board->pieces.at(Squares::D8) == Pieces::EMPTY &&
                         board->pieces.at(Squares::C8) == Pieces::EMPTY && board->pieces.at(Squares::B8) == Pieces::EMPTY) {
                     addNonCaptureMove(Move(Squares::E8, Squares::C8,
@@ -579,8 +581,8 @@ void MoveGenerator::perftTest(const Board& board, int depth) {
 }
 
 MoveGenerator::MoveGenerator(Board &board) : board(&board) {
-    moves.reserve(200);
-    capMoves.reserve(200);
+    moves.reserve(2000);
+    capMoves.reserve(2000);
     if(set) return;
     set = true;
 
@@ -595,6 +597,4 @@ void MoveGenerator::generateAllCapMoves() {
     for(auto move : moves)
         if(move.captured != Pieces::EMPTY)
             capMoves.emplace_back(move);
-
-    std::sort(std::begin(capMoves), std::end(capMoves),[](Move a, Move b){ return a.score > b.score;});
 }

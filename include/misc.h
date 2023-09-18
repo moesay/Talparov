@@ -2,10 +2,10 @@
 #define TALPAROV_MISC_H
 
 #include "board.h"
-#include "pv.h"
+#include "tptable.h"
 #include "movegen.h"
 #include "move.h"
 
-int getPvLine(const int&, Board&);
+int getPvLine(const int&, Board*);
 
 #endif

@@ -16,9 +16,28 @@ Move::Move() :
         valid = true;
     }
 
+char* Move::getMoveStr() {
+    static char moveStr[6];
+    char fileFrom = 'a' + filesBoard.at(from);
+    char rankFrom = '1' + ranksBoard.at(from);
+
+    char fileTo = 'a' + filesBoard.at(to);
+    char rankTo = '1' + ranksBoard.at(to);
+
+    char prom = pieceChar[promoted];
+
+    if(prom != '.') {
+        sprintf(moveStr, "%c%c%c%c%c", fileFrom, rankFrom, fileTo, rankTo, prom);
+    }
+    else {
+        sprintf(moveStr, "%c%c%c%c", fileFrom, rankFrom, fileTo, rankTo);
+    }
+    return moveStr;
+}
+
 std::ostream &operator<<(std::ostream &os, const Move &move) {
     if(move.from == Squares::NO_SQ || move.to == Squares::NO_SQ) {
-        os << "Invalid Move";
+        os << "Invalid Move\n";
         return os;
     }
 
